@@ -1,36 +1,37 @@
 #!/bin/bash
-# ------------------------------------------------------------
-# title           :docker/images.sh
-# description     :Useful functions to operate docker images
-# package         :shblocks
-# author          :protetore
-# date            :20150127
-# bash_version    :4.1.5(1)-release
-# ------------------------------------------------------------
+#
+# Useful functions to operate docker images
+#
+# Protetore Shell Util Package
+# github.com.protetore/shblocks.git
+#
 
-function isRegistryAccessible()
-{
-    REGISTRY_URL=${1:-}
-    REGISTRY_USR=${2:-}
-    REGISTRY_PWD=${3:-}
-    REGISTRY_AUTH="${REGISTRY_USR}:${REGISTRY_PWD}"
+function docker::isRegistryAccessible() {
+    local registryURL=${1:-}
+    local registryUSR=${2:-}
+    local registryPWD=${3:-}
+    local registryAUTH="${registryUSR}:${registryPWD}"
+    local status
 
-    if [ "$REGISTRY_URL" != "" ]; then
+    if [ "$registryURL" != "" ]; then
         # Private registry
-        if [ "$REGISTRY_USR" != "" ]; then
-            docker login $REGISTRY_URL -u $REGISTRY_USR -p $REGISTRY_PWD > /dev/null 2>&1
+        if [ "$registryUSR" != "" ]; then
+            docker login $registryURL -u $registryUSR -p $registryPWD > /dev/null 2>&1
             if [ ! $? -eq 0 ]; then
                 return 1
             fi
         else
-            status=$(curl -s -o /dev/null -w "%{http_code}" -k https://$REGISTRY_URL/v2/)
+            status=$(curl -s -o /dev/null -w "%{http_code}" \
+                       -k https://$registryURL/v2/)
             if [ "$status" != "200" ]; then
                 return 1
             fi
         fi
     else
         # Docker hub?
-        status=$(curl -s -o /dev/null -w "%{http_code}" -k https://hub.docker.com/v2/repositories/_catalog/)
+        status=$(curl -s -o /dev/null -w "%{http_code}" \
+                   -k https://hub.docker.com/v2/repositories/_catalog/)
+
         if [ "$status" != "200" ]; then
             return 1
         fi
@@ -39,8 +40,9 @@ function isRegistryAccessible()
     return 0
 }
 
-function getNextAvailablePort()
-{
+function docker::nextAvailablePort() {
+    local usedPorts m
+
     usedPorts=$(\
         docker ps --filter "label=ship-user-container" --format "{{.Ports}}" | \
         tr ',' '\n' | \
@@ -51,10 +53,8 @@ function getNextAvailablePort()
     )
 
     m=1000
-    for p in ${usedPorts[@]}
-    do
-        if [ $p -gt $m ];
-        then
+    for p in ${usedPorts[@]}; do
+        if [ $p -gt $m ]; then
             m=$p
         fi
     done
@@ -64,14 +64,19 @@ function getNextAvailablePort()
     echo $m
 }
 
-function imageTagExists()
-{
-    REGISTRY_URL=${1:-}
-    REGISTRY_USR=${2:-}
-    REGISTRY_PWD=${3:-}
-    REGISTRY_AUTH="${REGISTRY_USR}:${REGISTRY_PWD}"
+function docker::tagExists() {
+    local status
+    local registryAPP=${1:-}
+    local registryTAG=${2:-}
+    local registryURL=${3:-}
+    local registryUSR=${4:-}
+    local registryPWD=${5:-}
+    local registryAUTH="${registryUSR}:${registryPWD}"
 
-    status=$(curl -s -o /dev/null -w "%{http_code}" -k $REGISTRY_AUTH https://$REGISTRY_URL/v2/$APP_NAME/manifests/$APP_VERSION)
+    status=$(curl -s -o /dev/null -w "%{http_code}" \
+        -k $registryAUTH \
+        https://$registryURL/v2/$registryAPP/manifests/$registryTAG)
+
     if [ "$status" == "200" ]; then
         return 0
     else
@@ -79,21 +84,21 @@ function imageTagExists()
     fi
 }
 
-function getNextTag()
-{
-    REGISTRY_URL=${1:-}
-    REGISTRY_USR=${2:-}
-    REGISTRY_PWD=${3:-}
-    REGISTRY_AUTH="${REGISTRY_USR}:${REGISTRY_PWD}"
+function docker::nextTag() {
+    local registryAPP=${1:-}
+    local registryURL=${2:-}
+    local registryUSR=${3:-}
+    local registryPWD=${4:-}
+    local registryAUTH="${registryUSR}:${registryPWD}"
+    local latestTag=0
+    local tag tagsArr regex
 
-    latestTag=0
-    tags=$(curl -s -k $REGISTRY_AUTH https://$REGISTRY_URL/v2/$APP_NAME/tags/list)
+    tags=$(curl -s -k $registryAUTH https://$registryURL/v2/$registryAPP/tags/list)
 
     if echo "$tags" | $JQ -e 'has("tags")' > /dev/null; then
         tagsArr=( $(echo $tags | $JQ '.tags[]') )
 
-        for tag in ${tagsArr[@]}
-        do
+        for tag in ${tagsArr[@]}; do
             # Remove double quotes from json value
             tag=$(echo $tag | tr -d '"')
 
@@ -103,8 +108,7 @@ function getNextTag()
                continue
             fi
 
-            if [[ $tag -gt $latestTag ]];
-            then
+            if [[ $tag -gt $latestTag ]]; then
                 latestTag=$tag
             fi
         done
@@ -113,13 +117,13 @@ function getNextTag()
     echo $(( latestTag + 1 ))
 }
 
-function dockerImagesByRepo()
-{
-    REPO=${1:-}
-    previousImages=$(docker images | grep -w "${REPO}" | awk '{ print $3 }')
+function docker::imagesByRepo() {
+    local previousImages
+    local repo=${1:-}
 
-    if [ ! "$previousImages" == "" ];
-    then
+    previousImages=$(docker images | grep -w "${repo}" | awk '{ print $3 }')
+
+    if [ ! "$previousImages" == "" ]; then
         previousImages=$(echo $previousImages | tr '\n' ' ')
         previousImages=${previousImages%?}
         # Skip error output because some images can be in use
@@ -127,8 +131,8 @@ function dockerImagesByRepo()
     fi
 }
 
-function dockerCleanImages()
-{
+function docker::cleanImages() {
     # Skip error output because some images can be in use
-    docker images | grep none | awk '{ print \$3 }' | xargs -I{} docker rmi -f {} > /dev/null 2>&1
+    docker images | grep none | awk '{ print \$3 }' | \
+        xargs -I{} docker rmi -f {} > /dev/null 2>&1
 }

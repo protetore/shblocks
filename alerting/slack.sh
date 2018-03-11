@@ -1,18 +1,15 @@
 #!/bin/bash
-# ------------------------------------------------------------
-# title           :alerting/slack.sh
-# description     :Send notification to slack
-# package         :shblocks
-# author          :protetore
-# date            :20150127
-# bash_version    :4.1.5(1)-release
-# ------------------------------------------------------------
+#
+# Send a slack message to a channel
+#
+# Protetore Shell Util Package
+# github.com.protetore/shell-blocks.git
+#
 
-function notifySlack()
-{
-    SLACK_HOOK=${1:-}
-    SLACK_CHANNEL=${2:-}
-    TYPE=${3:="INFO"}
+SLACK_HOOK=""
+SLACK_CHANNEL=""
+
+function slack::send() {
 
     if [ "$SLACK_HOOK" == "" ] || [ "$SLACK_CHANNEL" == "" ];
     then
@@ -22,6 +19,13 @@ function notifySlack()
     # format message as a code block ```${msg}```
     SLACK_MESSAGE="\`\`\`$1\`\`\`"
     SLACK_URL=https://hooks.slack.com/services/${SLACK_HOOK}
+
+    if [ "$2" == "" ];
+    then
+        messageType="INFO"
+    else
+        messageType=$2
+    fi
 
     case "$messageType" in
         INFO)
@@ -43,8 +47,10 @@ function notifySlack()
 
     if [ "$status" == "ok" ];
     then
+        decho "Slack notified."
         return 0
     else
+        derror "Error notifying Slack."
         return 1
     fi
 }
