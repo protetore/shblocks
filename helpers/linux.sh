@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Useful linux functions
 #
@@ -9,7 +9,7 @@
 # Check if a user exists
 # @param $1 string user
 # @return  Success (0) if exists, Failure (1) otherwise
-linux::user_exists() {
+linux::userExists() {
         ret=1
         getent passwd $1 >/dev/null 2>&1 && ret=0
 
@@ -25,7 +25,7 @@ linux::user_exists() {
 # Check if a group exists
 # @param $1 string group
 # @return  Success (0) if exists, Failure (1) otherwise
-linux::group_exists() {
+linux::groupExists() {
     ret=1
     getent group $1 >/dev/null 2>&1 && ret=0
 
@@ -41,7 +41,7 @@ linux::group_exists() {
 # Check if a package is installed on system
 # @param $1 string packagename, $2 d flag users dpkg instead of rpm
 # @return  Success (0) if installed, Failure (1) otherwise
-linux::package_exists() {
+linux::packageExists() {
     if [ "$2" == "d" ]; then
         pkg=$(dpkg -l | grep $1)
     else
@@ -60,7 +60,7 @@ linux::package_exists() {
 # Check if a RPM package is installed on system
 # @param $1 string packagename
 # @return  Success (0) if installed, Failure (1) otherwise
-linux::rpm_package_exists() {
+linux::rpmPackageExists() {
     linux::package_exists $1
     return $?
 }
@@ -68,7 +68,7 @@ linux::rpm_package_exists() {
 # Check if a dpkg package is installed on system
 # @param $1 string packagename
 # @return  Success (0) if installed, Failure (1) otherwise
-linux::dpkg_package_exists() {
+linux::dpkgPackageExists() {
     linux::package_exists $1 d
     return $?
 }
@@ -76,7 +76,7 @@ linux::dpkg_package_exists() {
 # Check if a proccess is running by it's name or part of t
 # @param $1 string proccessname
 # @return  Success (0) if running, Failure (1) otherwise
-linux::is_running() {
+linux::isRunning() {
     res=$(ps -e -o uid,cmd | grep $UID | grep $1 | grep -v grep | grep -v bash | grep -v $0 | wc -l | tr -s "\n")
     if [[ $res -eq 0 ]]; then
         retval=1
@@ -89,7 +89,7 @@ linux::is_running() {
 # Return all PIDs of a given proccess name
 # @param $1 string proccessname
 # @return  array of PIDs if running, Failure (1) otherwise
-linux::get_pids() {
+linux::getPids() {
     res=$(ps -e -o uid,cmd | grep $UID | grep $1 | grep -v grep | grep -v bash | grep -v $0 | wc -l | tr -s "\n")
     if [[ $res -eq 0 ]]; then
         retval=1
@@ -105,7 +105,7 @@ linux::get_pids() {
 # Test whether a command exists
 # @param $1 = cmd to test
 # @return  Success (0) on success, Failure (1) otherwise
-linux::type_exists() {
+linux::typeExists() {
     if [[ $(type -P $1) ]]; then
       return 0
     fi
@@ -115,7 +115,7 @@ linux::type_exists() {
 # Test which OS the user runs
 # @param $1 = OS to test
 # @return  Success (0) on success, Failure (1) otherwise
-linux::is_os() {
+linux::isOS() {
     if [[ "${OSTYPE}" == $1* ]]; then
       return 0
     fi

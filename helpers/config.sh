@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Reads configuration from json file by path
 # Add config files to config list with config::setFile and read with

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Print user friendly and colored messages
 #
@@ -87,3 +87,22 @@ function logger::code() { logger:out "${COLORS_BLUE}$1${COLORS_NC}\n"; }
 
 # Print conf snipets in different color
 function logger::conf() { logger:out "${COLORS_PURPLE}$1${COLORS_NC}\n"; }
+
+# Print padded key -> value
+function logger::keyVal() {
+    local keyColSize=30
+    local key=$1
+    local val=$2
+    local padChar=$3
+    local padded
+    local padSize
+    local keySize=${#key}
+    local valSize=${#val}
+
+    padSize=$((keyColSize - keySize))
+    padChar=${padChar:="."}
+
+    printf -v row "%${padSize}s"
+    padded=${row// /${padChar}}
+    printf "${key} ${padded} ${val}\n"
+}
