@@ -10,9 +10,9 @@ function math::floor() {
     local number=$1
     local digits=$2
     digits=${digits:=0}
-    printf "%.*f\n" ${digits} ${number}
+    printf "%.*f\n" "${digits}" "${number}"
 }
 
 function math::ceil() {
-    printf %.0f $1
+    printf %.0f "$1"
 }
