@@ -21,28 +21,28 @@ function config::file() {
     local file
 
     if [[ ! ${CONFIG_FILES[key]+abc} ]]; then
-        debugger::error "Config file not found ${file}"
+        echo "Config file not found ${file}" 1>&2
         return 1
     fi
 
     file=${CONFIG_FILES[key]}
     if [[ ! -f ${file} ]]; then
-        debugger::error "Config file not found ${file}"
+        echo "Config file not found ${file}" 1>&2
         return 1
     fi
 
-    echo "$(cat $file)"
+    cat "$file"
 }
 
 function config::get() {
     local configPath=$1
     local config
-    config=$(config::file $2)
+    config=$(config::file "$2")
 
     if [ "$3" == "--quotes" ]; then
-        v=$(echo $config | $JQ "$configPath")
+        v=$(echo "$config" | $JQ "$configPath")
     else
-        v=$(echo $config | $JQ -r "$configPath")
+        v=$(echo "$config" | $JQ -r "$configPath")
     fi
 
     if [[ ! "$v" == "" && ! "$v" == "null" && ! "$v" == "\"\"" ]]; then
@@ -62,7 +62,7 @@ function config::get() {
 
 function config::toVar() {
     local configVar=$1 value
-    value=$(config::get $2 $3 $4)
+    value=$(config::get "$2" "$3" "$4")
     [[ $value ]] && eval $configVar=\$value
     return 0
 }
